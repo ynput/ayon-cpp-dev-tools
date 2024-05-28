@@ -1,0 +1,10 @@
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/backward-cpp")
+
+include_directories("${CMAKE_CURRENT_LIST_DIR}/src/Macros")
+
+
+if(BUILD_TEST)
+  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
+  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
+endif()
