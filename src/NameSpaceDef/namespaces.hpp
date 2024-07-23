@@ -24,6 +24,7 @@ namespace trace {}
 
 namespace tool {
 namespace usd {}
+namespace ayon {}
 }   // namespace tool
 
 namespace app {}
@@ -102,7 +103,7 @@ namespace app {}
 
 #define YNPUT_TOOL_AYON_NAMESPACE_USING_DIRECTIVE using namespace ynput::tool::ayon;
 #define YNPUT_TOOL_AYON_NAMESPACE_OPEN            namespace ynput::tool::ayon {
-#define YNPUT_TOOL_USD_NAMESPACE_CLOSE            }
+#define YNPUT_TOOL_AYON_NAMESPACE_CLOSE           }
 
 // app namespace
 #define YNPUT_APP_NAMESPACE_USING_DIRECTIVE using namespace ynput::app;

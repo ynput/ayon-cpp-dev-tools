@@ -3,6 +3,10 @@
 
 #include <regex>
 #include <string>
+#include "../../../../NameSpaceDef/namespaces.hpp"
+
+YNPUT_TOOL_AYON_NAMESPACE_OPEN
+
 // TODO after we implemented a singleton logger we will Re implement logging into this function
 std::string
 rootReplace(const std::string &rootLessPath, const std::unordered_map<std::string, std::string> &siteRoots) {
@@ -32,4 +36,5 @@ rootReplace(const std::string &rootLessPath, const std::unordered_map<std::strin
     return rootLessPath;
 };
 
+YNPUT_TOOL_AYON_NAMESPACE_CLOSE
 #endif   // !TOOL_AYON_ROT_HELPERS_DEF
