@@ -92,13 +92,17 @@ namespace app {}
 #define YNPUT_DT_TRACE_NAMESPACE_CLOSE           }
 
 // tool namespace
-#define YNPUT_TOOL_NAMESPACE_USING_DIRECTIVE     using namespace ynput::tool;
-#define YNPUT_TOOL_NAMESPACE_OPEN                namespace ynput::tool {
-#define YNPUT_TOOL_NAMESPACE_CLOSE               }
+#define YNPUT_TOOL_NAMESPACE_USING_DIRECTIVE      using namespace ynput::tool;
+#define YNPUT_TOOL_NAMESPACE_OPEN                 namespace ynput::tool {
+#define YNPUT_TOOL_NAMESPACE_CLOSE                }
 
-#define YNPUT_TOOL_USD_NAMESPACE_USING_DIRECTIVE using namespace ynput::tool::usd;
-#define YNPUT_TOOL_USD_NAMESPACE_OPEN            namespace ynput::tool::usd {
-#define YNPUT_TOOL_USD_NAMESPACE_CLOSE           }
+#define YNPUT_TOOL_USD_NAMESPACE_USING_DIRECTIVE  using namespace ynput::tool::usd;
+#define YNPUT_TOOL_USD_NAMESPACE_OPEN             namespace ynput::tool::usd {
+#define YNPUT_TOOL_USD_NAMESPACE_CLOSE            }
+
+#define YNPUT_TOOL_AYON_NAMESPACE_USING_DIRECTIVE using namespace ynput::tool::ayon;
+#define YNPUT_TOOL_AYON_NAMESPACE_OPEN            namespace ynput::tool::ayon {
+#define YNPUT_TOOL_USD_NAMESPACE_CLOSE            }
 
 // app namespace
 #define YNPUT_APP_NAMESPACE_USING_DIRECTIVE using namespace ynput::app;
