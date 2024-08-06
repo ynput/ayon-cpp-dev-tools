@@ -4,18 +4,22 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(AyonCppDevTools VERSION 1.0.0 LANGUAGES CXX)
 
-include_directories("${CMAKE_CURRENT_LIST_DIR}/src/NameSpaceDef")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/src/Macros")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/src/lib")
+add_library(AyonCppDevToolsLib INTERFACE)
+
+target_include_directories(AyonCppDevToolsLib INTERFACE
+    "${CMAKE_CURRENT_LIST_DIR}/src/NameSpaceDef"
+    "${CMAKE_CURRENT_LIST_DIR}/src/Macros"
+    "${CMAKE_CURRENT_LIST_DIR}/src/lib"
+)
 
 if(AYON_CPPTOOLS_GTEST)
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
+  target_include_directories(AyonCppDevToolsLib INTERFACE "${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
 endif()
 if(AYON_CPPTOOLS_GBNECH)
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
+  target_include_directories(AyonCppDevToolsLib INTERFACE "${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
 endif()
 
 
 if(AYON_CPPTOOLS_ENABLE_TESTING)
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
+  target_include_directories(AyonCppDevToolsLib INTERFACE "${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
