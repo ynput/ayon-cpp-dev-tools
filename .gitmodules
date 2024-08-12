@@ -7,3 +7,6 @@
 [submodule "ext/ayon_automator"]
 	path = ext/ayon_automator
 	url = https://github.com/ynput/ayon-automator.git
+[submodule "ext/spdlog"]
+	path = ext/spdlog
+	url = https://github.com/gabime/spdlog.git
