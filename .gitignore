@@ -1,2 +1,4 @@
 build/
 AyonCppDevTools_cicd/
+bin/
+.cache/

@@ -1,7 +1,6 @@
-#include "AyonLogger.h"
+#include "ynput/lib/logging/AyonLogger.hpp"
 #include <benchmark/benchmark.h>
-#include <filesystem>
-#include <iostream>
+
 #include <memory>
 #include <string>
 
@@ -101,14 +100,10 @@ BM_CompareNumbersRefBench(benchmark::State &state) {
 // Register the benchmark with a range of values
 BENCHMARK(BM_CompareNumbersRefBench)->Ranges({{1, 2}, {1, 3}});
 
-int
-main(int argc, char** argv) {
-    TestLogger
-        = std::make_unique<AyonLogger>(AyonLogger::getInstance("/home/lyonh/ynput/DevEnv/projects/AyonCppLogger/"
-                                                               "AyonCppLogger/test/out/test.json"));
+void
+setupLoggerBench() {
+    TestLogger = std::make_unique<AyonLogger>(
+        AyonLogger::getInstance(std::filesystem::current_path().string() + "/tests/out/LogTest.json"));
 
     TestLogger->regesterLoggingKey("ActiveKey");
-
-    benchmark::Initialize(&argc, argv);
-    benchmark::RunSpecifiedBenchmarks();
 }
