@@ -25,6 +25,12 @@ getEnvKey(const std::string &envKey) {
     return "";
 };
 
+/**
+ * @brief cleans an given environment key from any hidden characters line brakes and similar
+ *
+ * @param dirtyKey input key
+ * @return will return a clean Env Key
+ */
 std::string
 cleanEnvKey(std::string &dirtyKey) {
     auto start = dirtyKey.find_first_not_of(" \t\n\r\f\v");
@@ -36,6 +42,14 @@ cleanEnvKey(std::string &dirtyKey) {
     return dirtyKey.substr(start, end - start + 1);
 };
 
+/**
+ * @brief splits a given string string via a given delimiter. useful for splitting Env keys that should be used as a
+ * vector or an Map
+ *
+ * @param str input String to be split
+ * @param delimiter delimiter used to split the string
+ * @return vector of elements resulting from splitting the string by the delimiter. the delimiter will be removed
+ */
 std::vector<std::string>
 split(const std::string &str, char delimiter) {
     std::vector<std::string> tokens;

@@ -14,6 +14,8 @@
     #include <set>
     #include <spdlog/spdlog.h>
     #include <string>
+
+// TODO document Logger
 /**
  * @class AyonLogger
  * @brief Simple Logger Class that wraps around spdlog in order to expose easy

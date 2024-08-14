@@ -5,6 +5,13 @@
 #include <string>
 #include "../../../../NameSpaceDef/namespaces.hpp"
 
+/**
+ * @brief allows to replace the {root[xxx]} key from an Ayon resolver endpoint with the local root overwrites
+ *
+ * @param rootLessPath a path that needs its root replaces e.g {root[work]}/file/path.ext
+ * @param siteRoots a list of roots availalbe on the system e.g {work=/path/to, temp=/path/to}
+ * @return input string with the correct root replace. the {root[key]} will be removed
+ */
 YNPUT_TOOL_AYON_NAMESPACE_OPEN
 
 // TODO after we implemented a singleton logger we will Re implement logging into this function
