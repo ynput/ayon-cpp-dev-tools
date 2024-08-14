@@ -32,9 +32,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Python script
-        run: |
-          python Docs/src/generate.py --Version=0.1.0 --DontBuild=True   
+      # - name: Run Python script
+      #   run: |
+      #     python Docs/src/generate.py --Version=0.1.0 --DontBuild=True   
 
       - name: BuildDocs 
         uses: mattnotmitt/doxygen-action@v1.9.5
