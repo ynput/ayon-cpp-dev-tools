@@ -29,7 +29,8 @@ def main():
     output_dir = f"../docs/{cmd_args.Version}"
 
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
-
+    if os.path.exists(os.path.abspath(output_dir)):
+        print("Out Dir exists")
     with open(DOXY_FILE, "r") as file:
         doxyfile_content = file.read()
 
