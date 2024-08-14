@@ -27,6 +27,7 @@ def main():
     cmd_args = cmd_args.parse_args()
 
     output_dir = f"../docs/{cmd_args.Version}"
+    output_dir = os.path.abspath(output_dir)
 
     os.makedirs(os.path.abspath(output_dir), exist_ok=True)
     if os.path.exists(os.path.abspath(output_dir)):
