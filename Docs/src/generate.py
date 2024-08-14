@@ -28,7 +28,7 @@ def main():
 
     output_dir = f"../docs/{cmd_args.Version}"
 
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(os.path.abspath(output_dir), exist_ok=True)
 
     with open(DOXY_FILE, "r") as file:
         doxyfile_content = file.read()
