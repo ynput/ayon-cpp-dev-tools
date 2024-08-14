@@ -1,0 +1,11 @@
+# Building
+
+## Linux
+
+A simple way to build this project is with cmake, clone the repository, cd into
+the root of the project and run:
+
+    mkdir my_build
+    cmake -S . -B my_build
+    cd my_build
+    cmake --build .

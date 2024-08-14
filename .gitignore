@@ -2,3 +2,4 @@ build/
 AyonCppDevTools_cicd/
 bin/
 .cache/
+Docs/docs
