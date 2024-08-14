@@ -9,6 +9,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  VERSION: 0.1.0 
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -34,7 +37,7 @@ jobs:
 
       - name: Run Python script
         run: |
-          python Docs/src/generate.py --Version=0.2.0 --DontBuild=True   
+          python Docs/src/generate.py --Version=$VERSION --DontBuild=True   
 
       - name: BuildDocs 
         uses: mattnotmitt/doxygen-action@v1.9.5
@@ -49,7 +52,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository
-          path: 'Docs/docs/html'
+          path: 'Docs/docs/${{ env.VERSION }}/html'
 
       - name: Deploy to GitHub Pages
         id: deployment
