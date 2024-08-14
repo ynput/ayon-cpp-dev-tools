@@ -29,7 +29,7 @@ def main():
     os.chdir(os.path.dirname(__file__))
 
     output_dir = f"../docs/{cmd_args.Version}"
-    os.makedirs(os.path.abspath(output_dir))
+    os.makedirs(os.path.abspath(output_dir), exist_ok=True)
     if not os.path.exists(os.path.abspath(output_dir)):
         raise RuntimeError("the output foulder is missing")
 

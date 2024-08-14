@@ -1,17 +1,25 @@
-- @mainpage
+# Welcome to the AYON Cpp Dev Tools
 
-# Welcome to My Project
+This is the Ayon internal Cpp Main library used to share tools and code between
+Ynput Cpp projects
 
-This project helps to solve [specific problem]. Explore the documentation to
-learn more about how to use and contribute to this project.
+Explore the documentation to learn more about how to use and contribute to this
+project.
 
 ## Quick Links
 
-- [Getting Started Guide](getting_started.md)
-- [API Reference](annotated.html)
-- [Contributing](contributing.md)
+- [Getting Started Guide](md_md_Getting_Started.html)
+- [API Reference](globals.html)
+
+### Versions
+
+> **Note** Currently older versions don't have links to newer versions because
+> of the generation order
+
+<!-- Example for adding a version link-->
+
+<!-- - [V001.01.02](../../v001.01.02/html/index.html) -->
 
 ## License
 
-- This project is licensed under the MIT License - see the
-  [LICENSE file](LICENSE) for details.
+- This project is licensed under the Apache2.0 License.
