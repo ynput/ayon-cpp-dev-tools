@@ -29,6 +29,9 @@ def main():
     os.chdir(os.path.dirname(__file__))
 
     output_dir = f"../docs/{cmd_args.Version}"
+    os.makedirs(os.path.abspath(output_dir))
+    if not os.path.exists(os.path.abspath(output_dir)):
+        raise RuntimeError("the output foulder is missing")
 
     with open(DOXY_FILE, "r") as file:
         doxyfile_content = file.read()
