@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 
-project(AyonCppDevTools VERSION 1.0.0 LANGUAGES CXX)
+project(AyonCppDevTools VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_LIST_DIR}/bin)
 set(CMAKE_CXX_STANDARD 17)
