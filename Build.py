@@ -1,13 +1,10 @@
-from logging import log
 import os
 import shutil
 from ext.ayon_automator.AyonCiCd import Project, Cmake, GTest, GBench
 
 
 PRJ_ROOT_PATH = os.path.dirname(__file__)
-# raise ImportError(
-#     "implement build logger stage implement normal build stage implement test stage"
-# )
+
 Ayon_Cpp_Tools = Project.Project("AyonCppDevTools")
 Ayon_Cpp_Tools.setVar("enable_testing", "False")
 Ayon_Cpp_Tools.setVar("enable_benching", "False")
