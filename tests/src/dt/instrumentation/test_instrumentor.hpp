@@ -94,8 +94,7 @@ funcRecu(int depth) {
 TEST_F(InstrumentFixture, InstrumentFuncStack) {
     func3();
     std::string data = getTraceFileData(m_traceFile);
-
-    ASSERT_TRUE(data.find("Func3") != std::string::npos) << "Wrong data or no data in trace file";
+    ASSERT_TRUE(data.find("Func3") != std::string::npos) << "Wrong data or no data in trace file: " << data;
 }
 
 TEST_F(InstrumentFixture, InstrumentFuncRecursive) {
@@ -104,7 +103,7 @@ TEST_F(InstrumentFixture, InstrumentFuncRecursive) {
     std::string data = getTraceFileData(m_traceFile);
     for (int i = 0; i < 10; ++i) {
         ASSERT_TRUE(data.find("RecuFunc_" + std::to_string(i)) != std::string::npos)
-            << "Wrong data or no data in trace file";
+            << "Wrong data or no data in trace file" << data;
     }
 }
 
@@ -115,7 +114,7 @@ TEST_F(InstrumentFixture, InstrumentSimpleScopeWith1MsSleep) {
     }
 
     std::string data = getTraceFileData(m_traceFile);
-    ASSERT_TRUE(data.find("ScopedFuncTest") != std::string::npos) << "Wrong data or no data in trace file";
+    ASSERT_TRUE(data.find("ScopedFuncTest") != std::string::npos) << "Wrong data or no data in trace file" << data;
 }
 
 void
@@ -139,6 +138,6 @@ TEST_F(InstrumentFixture, InstrumentAsync) {
     std::string data = getTraceFileData(m_traceFile);
     for (int i = 0; i < range; ++i) {
         ASSERT_TRUE(data.find("AsyncFunc" + std::to_string(i)) != std::string::npos)
-            << "Wrong data or no data in trace file";
+            << "Wrong data or no data in trace file" << data;
     }
 }

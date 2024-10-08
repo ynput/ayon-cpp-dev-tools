@@ -9,8 +9,6 @@
 #include <filesystem>
 #include <iostream>
 #include <map>
-#include <optional>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <chrono>
@@ -19,6 +17,7 @@
 #include <mutex>
 #include <thread>
 #include <future>
+#include <vector>
 
 // TODO implement Event Types (ph) for async event display
 struct ProfileResult {
@@ -30,12 +29,14 @@ struct ProfileResult {
         std::map<std::string, std::string> args;
 };
 
+// TODO test if an writer thread allows to release the main thread faster
 class Instrumentor {
     private:
         std::ofstream m_OutputStream;
         int m_ProfileCount;
         std::mutex m_Mutex;
         std::string m_filePath;
+        std::vector<std::future<void>> m_WriteQue;
 
         void
         WriteHeader() {
@@ -128,14 +129,14 @@ class Instrumentor {
             this->NewSessoin(filePath);
             return m_filePath;
         }
-
+        // TODO ensure that we actually wait on all writes
         void
         EndSession() {
             this->WriteFooter();
             m_OutputStream.close();
             m_ProfileCount = 0;
         }
-        // TODO make this an future array so we can wait on them before destruction
+        // TODO find a good way to release the thread faster. (consider future array)
         void
         WriteProfileAsync(const ProfileResult &result) {
             std::future<void> async = std::async(std::launch::async, [this, result]() { this->WriteProfile(result); });
