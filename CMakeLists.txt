@@ -14,7 +14,14 @@ target_include_directories(AyonCppDevToolsLib INTERFACE
     "${CMAKE_CURRENT_LIST_DIR}/src/lib"
 )
 
+if(AYON_INSTRUMENT)
+  message(STATUS "Instrumentation is Enabled")
+  target_compile_definitions(AyonCppDevToolsLib INTERFACE AYON_INSTRUMENT) 
+endif()
+
 if(AYON_CPPTOOLS_BUILD_LOGGER)
+  message(STATUS "Building Logger is Enabled")
+  target_compile_definitions(AyonCppDevToolsLib INTERFACE AYON_CPPTOOLS_BUILD_LOGGER) 
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/spdlog")
   include_directories("${CMAKE_CURRENT_LIST_DIR}/ext/spdlog/include")
 endif()
@@ -22,13 +29,15 @@ endif()
 if(AYON_CPPTOOLS_ENABLE_TESTING)
   message(STATUS "Testing Builds are Enabled")
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
 
 if(AYON_CPPTOOLS_ENABLE_BENCH)
-
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
+  message(STATUS "Benchmark Builds are Enabled")
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
 
+if(AYON_CPPTOOLS_ENABLE_TESTING OR AYON_CPPTOOLS_ENABLE_BENCH)
+
+  target_compile_definitions(AyonCppDevToolsLib INTERFACE AYON_TEST_BUILD)
+  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
+endif()

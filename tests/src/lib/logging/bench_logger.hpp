@@ -5,8 +5,6 @@
 #include <string>
 
 std::unique_ptr<AyonLogger> TestLogger;
-bool falseBool = false;
-bool trueBool = true;
 
 void
 BM_AyonLoggerConstruction(benchmark::State &state) {
@@ -27,7 +25,16 @@ BENCHMARK(BM_AyonLoggerLogInfoNoKey);
 void
 BM_AyonLoggerRegKey(benchmark::State &state) {
     for (auto _: state) {
+        auto start = std::chrono::high_resolution_clock::now();
+
         TestLogger->regesterLoggingKey("TestKeyA");
+
+        auto end = std::chrono::high_resolution_clock::now();
+
+        TestLogger->unregisterLoggingKey("TestKeyA");
+
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        benchmark::DoNotOptimize(duration);
     }
 }
 BENCHMARK(BM_AyonLoggerRegKey);
@@ -35,7 +42,14 @@ BENCHMARK(BM_AyonLoggerRegKey);
 void
 BM_AyonLoggerUnRegKey(benchmark::State &state) {
     for (auto _: state) {
+        TestLogger->regesterLoggingKey("TestKeyA");
+        auto start = std::chrono::high_resolution_clock::now();
+
         TestLogger->unregisterLoggingKey("TestKeyA");
+
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        benchmark::DoNotOptimize(duration);
     }
 }
 BENCHMARK(BM_AyonLoggerUnRegKey);
@@ -60,7 +74,7 @@ BENCHMARK(BM_AyonLoggerLogInfoWrongKey);
 void
 BM_AyonLoggerLogInfoRightKey(benchmark::State &state) {
     for (auto _: state) {
-        TestLogger->info(TestLogger->key("KeyA"), "TestA");
+        TestLogger->info(TestLogger->key("ActiveKey"), "TestA");
     }
 }
 BENCHMARK(BM_AyonLoggerLogInfoRightKey);
@@ -82,23 +96,6 @@ BM_AyonLoggerIsKeyActiveFalse(benchmark::State &state) {
     }
 }
 BENCHMARK(BM_AyonLoggerIsKeyActiveFalse);
-
-static void
-BM_CompareNumbersRefBench(benchmark::State &state) {
-    int a = state.range(0);
-    int b = state.range(1);
-    bool result;
-
-    for (auto _: state) {
-        benchmark::DoNotOptimize(a);
-        benchmark::DoNotOptimize(b);
-        result = (a < b);
-        benchmark::DoNotOptimize(result);
-    }
-}
-
-// Register the benchmark with a range of values
-BENCHMARK(BM_CompareNumbersRefBench)->Ranges({{1, 2}, {1, 3}});
 
 void
 setupLoggerBench() {

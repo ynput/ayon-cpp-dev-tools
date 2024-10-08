@@ -1,4 +1,4 @@
-#ifdef AYON_CPPTOOLS_BUILD_LOGGER
+#ifndef AYON_CPPTOOLS_BUILD_LOGGER
     #define AYONLOGGER_H
 #endif   // DEBUG
 
@@ -9,11 +9,18 @@
     #include "spdlog/common.h"
     #include "spdlog/sinks/basic_file_sink.h"
     #include "spdlog/sinks/stdout_color_sinks.h"
+    #include "spdlog/sinks/ostream_sink.h"
     #include <filesystem>
+    #include <iostream>
     #include <memory>
     #include <set>
     #include <spdlog/spdlog.h>
     #include <string>
+
+    #ifdef AYON_TEST_BUILD
+
+std::ostringstream AyonTestOss;
+    #endif   // AYON_TEST_BUILD
 
 // TODO document Logger
 /**
@@ -166,6 +173,11 @@ class AyonLogger {
             this->m_ConsoleLogger = spdlog::stdout_color_mt("console");
             this->m_ConsoleLogger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
+    #ifdef AYON_TEST_BUILD
+            auto ostream_sink = std::make_shared<spdlog::sinks::ostream_sink_st>(AyonTestOss);
+            this->m_ConsoleLogger = std::make_shared<spdlog::logger>("root", ostream_sink);
+    #endif   // AYON_TEST_BUILD
+
             if (!filepath.empty()) {
                 this->m_EnableFileLogging = true;
                 this->m_FileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
@@ -193,7 +205,7 @@ class AyonLogger {
 
         std::shared_ptr<spdlog::logger> m_ConsoleLogger;
         std::shared_ptr<spdlog::logger> m_FileLogger;
-
+        // TODO use std::optional for this
         bool m_EnableFileLogging;
         std::string m_FileLoggerFilePath;
 
