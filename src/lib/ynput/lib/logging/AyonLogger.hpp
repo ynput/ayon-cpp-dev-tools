@@ -163,13 +163,13 @@ class AyonLogger {
 
     private:
         AyonLogger(const std::string &filepath) {
-            this->m_ConsoleLogger = spdlog::stdout_color_mt("console");
+            this->m_ConsoleLogger = spdlog::stdout_color_mt(filepath + "console");
             this->m_ConsoleLogger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
 
             if (!filepath.empty()) {
                 this->m_EnableFileLogging = true;
                 this->m_FileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
-                    "fileLogger", std::filesystem::absolute(filepath.c_str()));
+                    filepath + "fileLogger", std::filesystem::absolute(filepath.c_str()));
 
                 this->m_FileLogger->set_pattern(
                     "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"Thread "
