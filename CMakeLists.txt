@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(AyonCppDevToolsLib INTERFACE)
 
 target_include_directories(AyonCppDevToolsLib INTERFACE
+    "${CMAKE_CURRENT_LIST_DIR}/src" 
     "${CMAKE_CURRENT_LIST_DIR}/src/NameSpaceDef"
     "${CMAKE_CURRENT_LIST_DIR}/src/Macros"
     "${CMAKE_CURRENT_LIST_DIR}/src/lib"
@@ -31,4 +32,3 @@ if(AYON_CPPTOOLS_ENABLE_BENCH)
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
-
