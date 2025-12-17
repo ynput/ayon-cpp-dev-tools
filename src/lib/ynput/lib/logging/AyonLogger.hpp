@@ -1,6 +1,9 @@
 #pragma once
 
-// #include "spdlog/async.h"
+#define SPDLOG_NO_ASYNC_LOGGER
+#define SPDLOG_DISABLE_DEFAULT_LOGGER
+#define SPDLOG_NO_ATOMIC_LEVELS
+
 #include "spdlog/common.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -9,13 +12,51 @@
 #include <set>
 #include <spdlog/spdlog.h>
 #include <string>
+#include <iostream> // Added for std::cout/cerr
 
 class AyonLogger {
 public:
-    static AyonLogger &getInstance(const std::string &filepath) {
-        static AyonLogger AyonLoggerInstance(filepath);
+    // Singleton Accessor (Parameterless to avoid confusion about re-init)
+    static AyonLogger &getInstance() {
+        static AyonLogger AyonLoggerInstance;
         return AyonLoggerInstance;
     };
+
+    // Explicit Initialization for File Logging
+    void initFileLogger(const std::string &filepath) {
+        if (m_EnableFileLogging) {
+            std::cout << "[AyonLogger] File logger already enabled. Ignoring new path: " << filepath << std::endl;
+            return;
+        }
+
+        if (filepath.empty()) return;
+
+        std::cout << "[AyonLogger] Initializing file logger at: " << filepath << std::endl;
+        try {
+            auto abs_path = std::filesystem::absolute(filepath).string();
+            
+            // Create sink
+            auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(abs_path, true);
+            file_sink->set_pattern("{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"thread_id\":\"%t\",\"process_id\":\"%P\",\"message\":\"%v\"}");
+
+            // Create Logger
+            m_FileLogger = std::make_shared<spdlog::logger>("file_logger", file_sink);
+            m_FileLogger->set_level(spdlog::level::info);
+            
+            // CRITICAL FIX: Flush immediately on info to capture logs before crash
+            m_FileLogger->flush_on(spdlog::level::info);
+
+            m_EnableFileLogging = true;
+            std::cout << "[AyonLogger] File logger initialized successfully." << std::endl;
+        }
+        catch (const std::exception &e) {
+            std::cerr << "[AyonLogger] Failed to init file logger: " << e.what() << std::endl;
+        }
+    }
+
+    // --- Singleton Safety ---
+    AyonLogger(const AyonLogger&) = delete;            // Prevent Copying
+    AyonLogger& operator=(const AyonLogger&) = delete; // Prevent Assignment
 
     std::set<std::string>::iterator key(const std::string &key) {
         return m_EnabledLoggingKeys.find(key);
@@ -104,27 +145,17 @@ public:
     }
 
 private:
-    AyonLogger(const std::string &filepath) {
-        m_ConsoleLogger = spdlog::stdout_color_mt(filepath + "_console");
-        m_ConsoleLogger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
-
-        if (!filepath.empty()) {
-            m_EnableFileLogging = true;
-            try {
-                m_FileLogger = spdlog::basic_logger_mt(
-                    filepath + "_file",
-                    std::filesystem::absolute(filepath).string());
-
-                m_FileLogger->set_pattern(
-                    "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\","
-                    "\"level\":\"%l\",\"thread_id\":\"%t\","
-                    "\"process_id\":\"%P\",\"message\":\"%v\"}");
-            }
-            catch (const std::exception &e) {
-                m_EnableFileLogging = false;
-                m_ConsoleLogger->warn("Failed to init file logger '{}': {}", filepath, e.what());
-            }
-        }
+    // Private Constructor (Runs once)
+    AyonLogger() {
+        std::cout << "[AyonLogger] Singleton Constructor Started." << std::endl;
+        
+        // Console logger (always active)
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+        m_ConsoleLogger = std::make_shared<spdlog::logger>("console", console_sink);
+        m_ConsoleLogger->set_level(spdlog::level::info);
+        
+        std::cout << "[AyonLogger] Singleton Constructor Finished." << std::endl;
     }
 
     template<typename... Args>
@@ -146,11 +177,9 @@ private:
             m_FileLogger->set_level(lvl);
     }
 
-private:
     std::shared_ptr<spdlog::logger> m_ConsoleLogger;
     std::shared_ptr<spdlog::logger> m_FileLogger;
 
     bool m_EnableFileLogging{false};
     std::set<std::string> m_EnabledLoggingKeys;
 };
-
