@@ -22,6 +22,12 @@ public:
         return AyonLoggerInstance;
     };
 
+    // Backwards-compatible accessor that also initializes file logging
+    static AyonLogger &getInstance(const std::string &filepath) {
+        auto &instance = getInstance();
+        instance.initFileLogger(filepath);
+        return instance;
+    }
     // Explicit Initialization for File Logging
     void initFileLogger(const std::string &filepath) {
         if (m_EnableFileLogging) {
