@@ -146,19 +146,19 @@ public:
             log(spdlog::level::critical, fmt, std::forward<Args>(args)...);
     }
 
-    void LogLevelInfo(bool applyToFile = false) {
+    void setLogLevelInfo(bool applyToFile = false) {
         setLevel(spdlog::level::info, applyToFile);
     }
-    void LogLevelError(bool applyToFile = false) {
+    void setLogLevelError(bool applyToFile = false) {
         setLevel(spdlog::level::err, applyToFile);
     }
-    void LogLevelWarn(bool applyToFile = false) {
+    void setLogLevelWarn(bool applyToFile = false) {
         setLevel(spdlog::level::warn, applyToFile);
     }
-    void LogLevelCritical(bool applyToFile = false) {
+    void setLogLevelCritical(bool applyToFile = false) {
         setLevel(spdlog::level::critical, applyToFile);
     }
-    void LogLevelOff(bool applyToFile = false) {
+    void setLogLevelOff(bool applyToFile = false) {
         setLevel(spdlog::level::off, applyToFile);
     }
 
