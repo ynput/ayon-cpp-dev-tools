@@ -22,6 +22,12 @@ public:
         return AyonLoggerInstance;
     };
 
+    // Backwards-compatible accessor that also initializes file logging
+    static AyonLogger &getInstance(const std::string &filepath) {
+        auto &instance = getInstance();
+        instance.initFileLogger(filepath);
+        return instance;
+    }
     // Explicit Initialization for File Logging
     void initFileLogger(const std::string &filepath) {
         if (m_EnableFileLogging) {
@@ -37,7 +43,7 @@ public:
             
             // Create sink
             auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(abs_path, true);
-            file_sink->set_pattern("{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"thread_id\":\"%t\",\"process_id\":\"%P\",\"message\":\"%v\"}");
+            file_sink->set_pattern("{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"Thread Id\":\"%t\",\"Process Id\":\"%P\",\"message\":\"%v\"}");
 
             // Create Logger
             m_FileLogger = std::make_shared<spdlog::logger>("file_logger", file_sink);
