@@ -186,9 +186,15 @@ private:
     }
 
     ~AyonLogger() {
-        // Flush and shutdown async loggers properly
         flush();
-        spdlog::shutdown();
+        if (m_consoleLogger) {
+            spdlog::drop(m_consoleLogger->name());
+            m_consoleLogger.reset();
+        }
+        if (m_enableFileLogging && m_fileLogger) {
+            spdlog::drop(m_fileLogger->name());
+            m_fileLogger.reset();
+        }
     }
 
     template<typename... Args>
