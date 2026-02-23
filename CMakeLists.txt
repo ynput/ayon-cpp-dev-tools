@@ -9,26 +9,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(AyonCppDevToolsLib INTERFACE)
 
 target_include_directories(AyonCppDevToolsLib INTERFACE
-    "${CMAKE_CURRENT_LIST_DIR}/src" 
-    "${CMAKE_CURRENT_LIST_DIR}/src/NameSpaceDef"
-    "${CMAKE_CURRENT_LIST_DIR}/src/Macros"
-    "${CMAKE_CURRENT_LIST_DIR}/src/lib"
+  	"${CMAKE_CURRENT_LIST_DIR}/src" 
+	"${CMAKE_CURRENT_LIST_DIR}/src/NameSpaceDef"
+	"${CMAKE_CURRENT_LIST_DIR}/src/Macros"
+	"${CMAKE_CURRENT_LIST_DIR}/src/lib"
 )
 
 if(AYON_CPPTOOLS_BUILD_LOGGER)
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/spdlog")
-  include_directories("${CMAKE_CURRENT_LIST_DIR}/ext/spdlog/include")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/spdlog")
+	include_directories("${CMAKE_CURRENT_LIST_DIR}/ext/spdlog/include")
 endif()
 
 if(AYON_CPPTOOLS_ENABLE_TESTING)
-  message(STATUS "Testing Builds are Enabled")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
+	message(STATUS "Testing Builds are Enabled")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
 
 if(AYON_CPPTOOLS_ENABLE_BENCH)
-
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/googletest")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/ext/benchmark")
+	add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/tests")
 endif()
