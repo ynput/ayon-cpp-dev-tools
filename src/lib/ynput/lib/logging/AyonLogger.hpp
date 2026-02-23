@@ -50,10 +50,13 @@ public:
             }
 
             auto abs_path = std::filesystem::absolute(filepath).string();
-            
+
+            // Use a more unique logger name to avoid global name collisions
+            std::string logger_name = std::string("AyonLogger_file_logger_") + abs_path;
+
             // Create async file logger
             m_fileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
-                "file_logger", abs_path);
+                logger_name, abs_path);
             
             m_fileLogger->set_pattern(
                 "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\","
