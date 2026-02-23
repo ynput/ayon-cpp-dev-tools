@@ -6,6 +6,7 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include <filesystem>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <spdlog/spdlog.h>
 #include <string>
@@ -24,7 +25,6 @@
  */
 class AyonLogger {
 public:
-    // Singleton Accessor (Parameterless to avoid confusion about re-init)
     static AyonLogger& getInstance() {
         static AyonLogger instance;
         return instance;
@@ -34,6 +34,8 @@ public:
     // @param filepath: Path to the log file
     // @param flushIntervalSeconds: 0 = flush on warn/error only, >0 = flush every n seconds
     void initFileLogger(const std::string& filepath, unsigned int flushIntervalSeconds = 0) {
+        std::lock_guard<std::mutex> lock(m_initMutex);
+
         if (m_enableFileLogging) {
             std::cout << "[AyonLogger] File logger already enabled. Ignoring new path: " 
                       << filepath << std::endl;
@@ -44,12 +46,13 @@ public:
 
         std::cout << "[AyonLogger] Initializing async file logger at: " << filepath << std::endl;
         try {
+            // Initialize async thread pool only if not already initialized
+            // (another component may have already called spdlog::init_thread_pool)
             if (!spdlog::thread_pool()) {
                 spdlog::init_thread_pool(8192, 1);
             }
 
             auto abs_path = std::filesystem::absolute(filepath).string();
-
             std::string logger_name = std::string("AyonLogger_file_logger_") + abs_path;
 
             m_fileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
@@ -222,5 +225,6 @@ private:
     std::shared_ptr<spdlog::logger> m_fileLogger;
 
     bool m_enableFileLogging{false};
+    std::mutex m_initMutex;
     std::set<std::string> m_enabledLoggingKeys;
 };
