@@ -44,11 +44,8 @@ public:
 
         std::cout << "[AyonLogger] Initializing async file logger at: " << filepath << std::endl;
         try {
-            // Initialize async thread pool if not already done
-            static bool pool_initialized = false;
-            if (!pool_initialized) {
+            if (!spdlog::thread_pool()) {
                 spdlog::init_thread_pool(8192, 1);
-                pool_initialized = true;
             }
 
             auto abs_path = std::filesystem::absolute(filepath).string();
