@@ -30,8 +30,10 @@ public:
         return instance;
     }
 
-    // Explicit Initialization for File Logging
-    void initFileLogger(const std::string& filepath) {
+        // Explicit Initialization for File Logging
+    // @param filepath: Path to the log file
+    // @param flushIntervalSeconds: 0 = flush on warn/error only, >0 = flush every n seconds
+    void initFileLogger(const std::string& filepath, unsigned int flushIntervalSeconds = 0) {
         if (m_enableFileLogging) {
             std::cout << "[AyonLogger] File logger already enabled. Ignoring new path: " 
                       << filepath << std::endl;
@@ -51,10 +53,8 @@ public:
 
             auto abs_path = std::filesystem::absolute(filepath).string();
 
-            // Use a more unique logger name to avoid global name collisions
             std::string logger_name = std::string("AyonLogger_file_logger_") + abs_path;
 
-            // Create async file logger
             m_fileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
                 logger_name, abs_path);
             
@@ -62,9 +62,14 @@ public:
                 "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\","
                 "\"thread_id\":\"%t\",\"process_id\":\"%P\",\"message\":\"%v\"}");
             m_fileLogger->set_level(spdlog::level::info);
-            
-            // Flush immediately on info level to capture logs before crash
-            m_fileLogger->flush_on(spdlog::level::info);
+
+            if (flushIntervalSeconds > 0) {
+                // Periodic flush - better throughput for async logging
+                spdlog::flush_every(std::chrono::seconds(flushIntervalSeconds));
+            } else {
+                // Flush only on warn or above - avoids flushing on every info log
+                m_fileLogger->flush_on(spdlog::level::warn);
+            }
 
             m_enableFileLogging = true;
             std::cout << "[AyonLogger] Async file logger initialized successfully." << std::endl;
