@@ -30,7 +30,7 @@ public:
         return instance;
     }
 
-        // Explicit Initialization for File Logging
+    // Explicit Initialization for File Logging
     // @param filepath: Path to the log file
     // @param flushIntervalSeconds: 0 = flush on warn/error only, >0 = flush every n seconds
     void initFileLogger(const std::string& filepath, unsigned int flushIntervalSeconds = 0) {
