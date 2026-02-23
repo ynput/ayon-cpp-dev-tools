@@ -1,6 +1,7 @@
 #ifndef TOOL_AYON_ROT_HELPERS_DEF
 #define TOOL_AYON_ROT_HELPERS_DEF
 
+#include <algorithm>
 #include <regex>
 #include <string>
 #include "../../../../NameSpaceDef/namespaces.hpp"
@@ -32,6 +33,7 @@ rootReplace(const std::string &rootLessPath, const std::unordered_map<std::strin
             try {
                 std::string replacement = siteRoots.at(breakedString);
                 rootedPath = std::regex_replace(rootLessPath, rootFindPattern, replacement);
+                std::replace(rootedPath.begin(), rootedPath.end(), '\\', '/');
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
