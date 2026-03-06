@@ -86,7 +86,7 @@ getEnvArray(const std::string &envKey) {
 
 /**
  * @brief split an environment key into a std::map
- * delimiter = `,` key value definition = {key}:{value}
+ * delimiter = `,` key value definition = {key}={value}
  *
  * @param envKey
  * @return
@@ -101,8 +101,13 @@ getEnvMap(const std::string &envKey) {
     std::vector<std::string> dirtyArrayItems = split(envKeyVal, ',');
 
     for (std::string &dirtyItem: dirtyArrayItems) {
-        std::vector<std::string> dirtySplitItems = split(dirtyItem, ':');
-        envMap.emplace(std::make_pair(cleanEnvKey(dirtySplitItems.at(0)), cleanEnvKey(dirtySplitItems.at(1))));
+        // Split on first '=' only — colon ':' breaks Windows drive letters (e.g. work=W:)
+        auto eqPos = dirtyItem.find('=');
+        if (eqPos != std::string::npos) {
+            std::string key = dirtyItem.substr(0, eqPos);
+            std::string val = dirtyItem.substr(eqPos + 1);
+            envMap.emplace(std::make_pair(cleanEnvKey(key), cleanEnvKey(val)));
+        }
     }
     return envMap;
 };
