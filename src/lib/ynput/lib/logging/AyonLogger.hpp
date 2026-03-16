@@ -1,202 +1,232 @@
-#ifdef AYON_CPPTOOLS_BUILD_LOGGER
-    #define AYONLOGGER_H
-#endif   // DEBUG
+#pragma once
 
-#ifndef AYONLOGGER_H
-    #define AYONLOGGER_H
+#include "spdlog/async.h"
+#include "spdlog/common.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 
-    #include "spdlog/async.h"
-    #include "spdlog/common.h"
-    #include "spdlog/sinks/basic_file_sink.h"
-    #include "spdlog/sinks/stdout_color_sinks.h"
-    #include <filesystem>
-    #include <memory>
-    #include <set>
-    #include <spdlog/spdlog.h>
-    #include <string>
+#include <filesystem>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <set>
+#include <spdlog/spdlog.h>
+#include <string>
+#include <utility>
 
-// TODO document Logger
 /**
  * @class AyonLogger
  * @brief Simple Logger Class that wraps around spdlog in order to expose easy
- * logging functions \n AyonLogger::getInstance(log_File_path.json) init code \n
- *  automaticly logs to file and console
+ * logging functions. Uses async logging for better performance.
+ * 
+ * Usage:
+ *   auto& log = AyonLogger::getInstance();
+ *   log.initFileLogger("/tmp/app.log");
+ *   log.registerLoggingKey("MyModule");
+ *   log.info(log.key("MyModule"), "Started {}", version);
  */
-
 class AyonLogger {
-    public:
-        static AyonLogger &
-        getInstance(const std::string &filepath) {
-            static AyonLogger AyonLoggerInstance(filepath);
-            return AyonLoggerInstance;
-        };
+public:
+    static AyonLogger& getInstance() {
+        static AyonLogger instance;
+        return instance;
+    }
 
-        std::set<std::string>::iterator
-        key(const std::string &key) {
-            return this->m_EnabledLoggingKeys.find(key);
-        };
+    // Explicit Initialization for File Logging
+    // @param filepath: Path to the log file
+    // @param flushIntervalSeconds: 0 = flush on warn/error only, >0 = flush every n seconds
+    void initFileLogger(const std::string& filepath, unsigned int flushIntervalSeconds = 0) {
+        std::lock_guard<std::mutex> lock(m_initMutex);
 
-        bool
-        regesterLoggingKey(const std::string &KeyName) {
-            std::pair<std::set<std::string>::iterator, bool> insertion = this->m_EnabledLoggingKeys.insert(KeyName);
-            if (insertion.second) {
-                return true;
+        if (m_enableFileLogging) {
+            std::cout << "[AyonLogger] File logger already enabled. Ignoring new path: " 
+                      << filepath << std::endl;
+            return;
+        }
+
+        if (filepath.empty()) return;
+
+        std::cout << "[AyonLogger] Initializing async file logger at: " << filepath << std::endl;
+        try {
+            // Initialize async thread pool only if not already initialized
+            // (another component may have already called spdlog::init_thread_pool)
+            if (!spdlog::thread_pool()) {
+                spdlog::init_thread_pool(8192, 1);
             }
-            return false;
-        };
 
-        bool
-        unregisterLoggingKey(const std::string &KeyName) {
-            std::set<std::string>::iterator it = this->m_EnabledLoggingKeys.find(KeyName);
-            if (it != this->m_EnabledLoggingKeys.end()) {
-                this->m_EnabledLoggingKeys.erase(it);
-                return true;
+            auto abs_path = std::filesystem::absolute(filepath).string();
+            std::string logger_name = std::string("AyonLogger_file_logger_") + abs_path;
+
+            m_fileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
+                logger_name, abs_path);
+            
+            m_fileLogger->set_pattern(
+                "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\","
+                "\"thread_id\":\"%t\",\"process_id\":\"%P\",\"message\":\"%v\"}");
+            m_fileLogger->set_level(spdlog::level::info);
+
+            if (flushIntervalSeconds > 0) {
+                // Periodic flush - better throughput for async logging
+                spdlog::flush_every(std::chrono::seconds(flushIntervalSeconds));
+            } else {
+                // Flush only on warn or above - avoids flushing on every info log
+                m_fileLogger->flush_on(spdlog::level::warn);
             }
-            return false;
-        };
 
-        bool
-        isKeyActive(const std::set<std::string>::iterator &logginIterator) {
-            if (logginIterator != this->m_EnabledLoggingKeys.end()) {
-                return true;
-            }
-            return false;
-        };
+            m_enableFileLogging = true;
+            std::cout << "[AyonLogger] Async file logger initialized successfully." << std::endl;
+        }
+        catch (const std::exception& e) {
+            std::cerr << "[AyonLogger] Failed to init async file logger: " << e.what() << std::endl;
+            m_enableFileLogging = false;
+        }
+    }
 
-        template<typename... Args>
-        void
-        error(const std::set<std::string>::iterator &logginIterator, const std::string &format, const Args &... args) {
-            if (logginIterator != this->m_EnabledLoggingKeys.end()) {
-                log("error", format, args...);
-            }
-        };
+    // --- Singleton Safety ---
+    AyonLogger(const AyonLogger&) = delete;
+    AyonLogger& operator=(const AyonLogger&) = delete;
 
-        template<typename... Args>
-        void
-        error(const std::string &format, const Args &... args) {
-            log("error", format, args...);
-        };
+    std::set<std::string>::iterator key(const std::string& key) {
+        return m_enabledLoggingKeys.find(key);
+    }
 
-        template<typename... Args>
-        void
-        info(const std::set<std::string>::iterator &logginIterator, const std::string &format, const Args &... args) {
-            if (logginIterator != this->m_EnabledLoggingKeys.end()) {
-                log("info", format, args...);
-            }
-        };
+    bool registerLoggingKey(const std::string& keyName) {
+        auto insertion = m_enabledLoggingKeys.insert(keyName);
+        return insertion.second;
+    }
 
-        template<typename... Args>
-        void
-        info(const std::string &format, const Args &... args) {
-            log("info", format, args...);
-        };
+    bool unregisterLoggingKey(const std::string& keyName) {
+        auto it = m_enabledLoggingKeys.find(keyName);
+        if (it != m_enabledLoggingKeys.end()) {
+            m_enabledLoggingKeys.erase(it);
+            return true;
+        }
+        return false;
+    }
 
-        template<typename... Args>
-        void
-        warn(const std::set<std::string>::iterator &logginIterator, const std::string &format, const Args &... args) {
-            if (logginIterator != this->m_EnabledLoggingKeys.end()) {
-                log("warn", format, args...);
-            }
-        };
+    bool isKeyActive(const std::set<std::string>::iterator& loggingIterator) {
+        return loggingIterator != m_enabledLoggingKeys.end();
+    }
 
-        template<typename... Args>
-        void
-        warn(const std::string &format, const Args &... args) {
-            log("warn", format, args...);
-        };
+    template<typename... Args>
+    void error(fmt::format_string<Args...> fmt, Args&&... args) {
+        log(spdlog::level::err, fmt, std::forward<Args>(args)...);
+    }
 
-        template<typename... Args>
-        void
-        critical(const std::set<std::string>::iterator &logginIterator,
-                 const std::string &format,
-                 const Args &... args) {
-            if (logginIterator != this->m_EnabledLoggingKeys.end()) {
-                log("critical", format, args...);
-            }
-        };
+    template<typename... Args>
+    void error(const std::set<std::string>::iterator& it,
+               fmt::format_string<Args...> fmt, Args&&... args) {
+        if (isKeyActive(it))
+            log(spdlog::level::err, fmt, std::forward<Args>(args)...);
+    }
 
-        template<typename... Args>
-        void
-        critical(const std::string &format, const Args &... args) {
-            log("critical", format, args...);
-        };
+    template<typename... Args>
+    void info(fmt::format_string<Args...> fmt, Args&&... args) {
+        log(spdlog::level::info, fmt, std::forward<Args>(args)...);
+    }
 
-        void
-        LogLevlInfo(const bool &alsoSetFileLogger = false) {
-            if (alsoSetFileLogger) {
-                this->m_FileLogger->set_level(spdlog::level::info);
-            }
-            this->m_ConsoleLogger->set_level(spdlog::level::info);
-        };
+    template<typename... Args>
+    void info(const std::set<std::string>::iterator& it,
+              fmt::format_string<Args...> fmt, Args&&... args) {
+        if (isKeyActive(it))
+            log(spdlog::level::info, fmt, std::forward<Args>(args)...);
+    }
 
-        void
-        LogLevlError(const bool &alsoSetFileLogger = false) {
-            if (alsoSetFileLogger) {
-                this->m_FileLogger->set_level(spdlog::level::err);
-            }
-            this->m_ConsoleLogger->set_level(spdlog::level::err);
-        };
+    template<typename... Args>
+    void warn(fmt::format_string<Args...> fmt, Args&&... args) {
+        log(spdlog::level::warn, fmt, std::forward<Args>(args)...);
+    }
 
-        void
-        LogLevlWarn(const bool &alsoSetFileLogger = false) {
-            if (alsoSetFileLogger) {
-                this->m_FileLogger->set_level(spdlog::level::warn);
-            }
-            this->m_ConsoleLogger->set_level(spdlog::level::warn);
-        };
+    template<typename... Args>
+    void warn(const std::set<std::string>::iterator& it,
+              fmt::format_string<Args...> fmt, Args&&... args) {
+        if (isKeyActive(it))
+            log(spdlog::level::warn, fmt, std::forward<Args>(args)...);
+    }
 
-        void
-        LogLevlCritical(const bool &alsoSetFileLogger = false) {
-            if (alsoSetFileLogger) {
-                this->m_FileLogger->set_level(spdlog::level::critical);
-            }
-            this->m_ConsoleLogger->set_level(spdlog::level::critical);
-        };
+    template<typename... Args>
+    void critical(fmt::format_string<Args...> fmt, Args&&... args) {
+        log(spdlog::level::critical, fmt, std::forward<Args>(args)...);
+    }
 
-        void
-        LogLevlOff(const bool &alsoSetFileLogger = false) {
-            if (alsoSetFileLogger) {
-                this->m_FileLogger->set_level(spdlog::level::off);
-            }
-            this->m_ConsoleLogger->set_level(spdlog::level::off);
-        };
+    template<typename... Args>
+    void critical(const std::set<std::string>::iterator& it,
+                  fmt::format_string<Args...> fmt, Args&&... args) {
+        if (isKeyActive(it))
+            log(spdlog::level::critical, fmt, std::forward<Args>(args)...);
+    }
 
-    private:
-        AyonLogger(const std::string &filepath) {
-            this->m_ConsoleLogger = spdlog::stdout_color_mt("console");
-            this->m_ConsoleLogger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+    void setLogLevelInfo(bool applyToFile = false) {
+        setLevel(spdlog::level::info, applyToFile);
+    }
+    void setLogLevelError(bool applyToFile = false) {
+        setLevel(spdlog::level::err, applyToFile);
+    }
+    void setLogLevelWarn(bool applyToFile = false) {
+        setLevel(spdlog::level::warn, applyToFile);
+    }
+    void setLogLevelCritical(bool applyToFile = false) {
+        setLevel(spdlog::level::critical, applyToFile);
+    }
+    void setLogLevelOff(bool applyToFile = false) {
+        setLevel(spdlog::level::off, applyToFile);
+    }
 
-            if (!filepath.empty()) {
-                this->m_EnableFileLogging = true;
-                this->m_FileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
-                    "fileLogger", std::filesystem::absolute(filepath.c_str()));
+    // Explicit flush for async loggers
+    void flush() {
+        if (m_consoleLogger) m_consoleLogger->flush();
+        if (m_enableFileLogging && m_fileLogger) m_fileLogger->flush();
+    }
 
-                this->m_FileLogger->set_pattern(
-                    "{\"timestamp\":\"%Y-%m-%d %H:%M:%S.%e\",\"level\":\"%l\",\"Thread "
-                    "Id\":\"%t\",\"Process Id\":\"%P\",\"message\":\"%v\"}");
-            }
-            else {
-                this->m_EnableFileLogging = false;
-            }
-        };
+private:
+    // Private Constructor (Runs once)
+    AyonLogger() {
+        std::cout << "[AyonLogger] Singleton Constructor Started." << std::endl;
+        
+        // Console logger (synchronous for immediate feedback)
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+        console_sink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+        m_consoleLogger = std::make_shared<spdlog::logger>("console", console_sink);
+        m_consoleLogger->set_level(spdlog::level::info);
+        
+        std::cout << "[AyonLogger] Singleton Constructor Finished." << std::endl;
+    }
 
-        template<typename... Args>
-        void
-        log(const std::string &level, const std::string &massage, const Args &... args) {
-            std::string formatted_message = fmt::vformat(massage, fmt::make_format_args(args...));
+    ~AyonLogger() {
+        flush();
+        if (m_consoleLogger) {
+            spdlog::drop(m_consoleLogger->name());
+            m_consoleLogger.reset();
+        }
+        if (m_enableFileLogging && m_fileLogger) {
+            spdlog::drop(m_fileLogger->name());
+            m_fileLogger.reset();
+        }
+    }
 
-            if (this->m_EnableFileLogging) {
-                this->m_FileLogger->log(spdlog::level::from_str(level), formatted_message);
-            }
-            this->m_ConsoleLogger->log(spdlog::level::from_str(level), formatted_message);
-        };
+    template<typename... Args>
+    void log(spdlog::level::level_enum lvl,
+             fmt::format_string<Args...> fmt,
+             Args&&... args)
+    {
+        if (m_consoleLogger)
+            m_consoleLogger->log(lvl, fmt, std::forward<Args>(args)...);
 
-        std::shared_ptr<spdlog::logger> m_ConsoleLogger;
-        std::shared_ptr<spdlog::logger> m_FileLogger;
+        if (m_enableFileLogging && m_fileLogger)
+            m_fileLogger->log(lvl, fmt, std::forward<Args>(args)...);
+    }
 
-        bool m_EnableFileLogging;
-        std::string m_FileLoggerFilePath;
+    void setLevel(spdlog::level::level_enum lvl, bool applyToFile) {
+        if (m_consoleLogger)
+            m_consoleLogger->set_level(lvl);
+        if (applyToFile && m_fileLogger)
+            m_fileLogger->set_level(lvl);
+    }
 
-        std::set<std::string> m_EnabledLoggingKeys;
+    std::shared_ptr<spdlog::logger> m_consoleLogger;
+    std::shared_ptr<spdlog::logger> m_fileLogger;
+
+    bool m_enableFileLogging{false};
+    std::mutex m_initMutex;
+    std::set<std::string> m_enabledLoggingKeys;
 };
-#endif
