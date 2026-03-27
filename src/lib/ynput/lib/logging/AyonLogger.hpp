@@ -194,7 +194,9 @@ private:
     }
 
     ~AyonLogger() {
-        flush();
+        if (m_consoleLogger) {
+            m_consoleLogger->flush();
+        }
         if (m_enableFileLogging && m_fileLogger) {
             spdlog::drop(m_fileLogger->name());
             m_fileLogger.reset();
