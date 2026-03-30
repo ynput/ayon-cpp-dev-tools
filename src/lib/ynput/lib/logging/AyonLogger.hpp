@@ -53,6 +53,7 @@ public:
             if (!spdlog::thread_pool()) {
                 spdlog::init_thread_pool(8192, 1);
             }
+            m_fileLoggerThreadPool = spdlog::thread_pool();
 
             auto abs_path = std::filesystem::absolute(filepath).string();
             std::string logger_name = std::string("AyonLogger_file_logger_") + abs_path;
@@ -175,7 +176,7 @@ public:
     // Explicit flush for async loggers
     void flush() {
         if (m_consoleLogger) m_consoleLogger->flush();
-        if (m_enableFileLogging && m_fileLogger) m_fileLogger->flush();
+        if (canUseAsyncFileLogger()) m_fileLogger->flush();
     }
 
 private:
@@ -193,14 +194,18 @@ private:
     }
 
     ~AyonLogger() {
-        flush();
         if (m_consoleLogger) {
-            spdlog::drop(m_consoleLogger->name());
-            m_consoleLogger.reset();
+            m_consoleLogger->flush();
         }
         if (m_enableFileLogging && m_fileLogger) {
             spdlog::drop(m_fileLogger->name());
             m_fileLogger.reset();
+            m_fileLoggerThreadPool.reset();
+            m_enableFileLogging = false;
+        }
+        if (m_consoleLogger) {
+            spdlog::drop(m_consoleLogger->name());
+            m_consoleLogger.reset();
         }
     }
 
@@ -212,8 +217,12 @@ private:
         if (m_consoleLogger)
             m_consoleLogger->log(lvl, fmt, std::forward<Args>(args)...);
 
-        if (m_enableFileLogging && m_fileLogger)
+        if (canUseAsyncFileLogger())
             m_fileLogger->log(lvl, fmt, std::forward<Args>(args)...);
+    }
+
+    bool canUseAsyncFileLogger() const {
+        return m_enableFileLogging && m_fileLogger && !m_fileLoggerThreadPool.expired();
     }
 
     void setLevel(spdlog::level::level_enum lvl, bool applyToFile) {
@@ -225,6 +234,7 @@ private:
 
     std::shared_ptr<spdlog::logger> m_consoleLogger;
     std::shared_ptr<spdlog::logger> m_fileLogger;
+    std::weak_ptr<spdlog::details::thread_pool> m_fileLoggerThreadPool;
 
     bool m_enableFileLogging{false};
     std::mutex m_initMutex;
