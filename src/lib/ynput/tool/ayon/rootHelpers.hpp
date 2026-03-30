@@ -2,6 +2,7 @@
 #define TOOL_AYON_ROT_HELPERS_DEF
 
 #include "../../../../NameSpaceDef/namespaces.hpp"
+#include "../../lib/logging/AyonLogger.hpp"
 
 #include <algorithm>
 #include <regex>
@@ -17,9 +18,15 @@
  */
 YNPUT_TOOL_AYON_NAMESPACE_OPEN
 
-// TODO after we implemented a singleton logger we will Re implement logging into this function
 std::string
 rootReplace(const std::string &rootLessPath, const std::unordered_map<std::string, std::string> &siteRoots) {
+    auto & logger = AyonLogger::getInstance();
+    static const std::string kLogKeyName = "rootReplace";
+    static const bool kRegistered = logger.registerLoggingKey(kLogKeyName);
+    (void)kRegistered;
+
+    auto logKey = logger.key(kLogKeyName);
+
     std::string rootedPath;
 
     std::smatch matchea;
@@ -38,6 +45,7 @@ rootReplace(const std::string &rootLessPath, const std::unordered_map<std::strin
                 return rootedPath;
             }
             catch (std::out_of_range &e) {
+                logger.warn(logKey, "Could not find site root '{}' for path '{}'", key, rootLessPath);
                 return rootLessPath;
             }
         }
