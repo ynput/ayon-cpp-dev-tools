@@ -157,6 +157,22 @@ public:
             log(spdlog::level::critical, fmt, std::forward<Args>(args)...);
     }
 
+    void setLogLevel(spdlog::level::level_enum lvl, bool applyToFile = false) {
+        setLevel(lvl, applyToFile);
+    }
+
+    void setLogLevel(const std::string& levelStr, bool applyToFile = false) {
+        auto lvl = spdlog::level::from_str(levelStr);
+        setLevel(lvl, applyToFile);
+    }
+
+    void setLogLevelFromEnv(const std::string& envKey = "AYON_USD_RESOLVER_LOG_LVL", bool applyToFile = false) {
+        auto envVal = std::getenv(envKey.c_str());
+        if (envVal) {
+            setLogLevel(std::string(envVal), applyToFile);
+        }
+    }
+
     void setLogLevelInfo(bool applyToFile = false) {
         setLevel(spdlog::level::info, applyToFile);
     }
