@@ -170,6 +170,8 @@ public:
         auto envVal = std::getenv(envKey.c_str());
         if (envVal) {
             setLogLevel(std::string(envVal), applyToFile);
+            std::cout << "[AyonLogger] Log level set from environment variable '" << envKey 
+                      << "' with value '" << envVal << "'" << std::endl;
         }
     }
 
