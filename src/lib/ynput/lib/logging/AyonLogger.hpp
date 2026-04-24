@@ -5,6 +5,8 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <iostream>
 #include <memory>
@@ -162,7 +164,13 @@ public:
     }
 
     void setLogLevel(const std::string& levelStr, bool applyToFile = false) {
-        auto lvl = spdlog::level::from_str(levelStr);
+        auto normalizedLevel = levelStr;
+        std::transform(
+            normalizedLevel.begin(),
+            normalizedLevel.end(),
+            normalizedLevel.begin(),
+            ::tolower);
+        auto lvl = spdlog::level::from_str(normalizedLevel);
         setLevel(lvl, applyToFile);
     }
 
