@@ -5,6 +5,8 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <iostream>
 #include <memory>
@@ -155,6 +157,30 @@ public:
                   fmt::format_string<Args...> fmt, Args&&... args) {
         if (isKeyActive(it))
             log(spdlog::level::critical, fmt, std::forward<Args>(args)...);
+    }
+
+    void setLogLevel(spdlog::level::level_enum lvl, bool applyToFile = false) {
+        setLevel(lvl, applyToFile);
+    }
+
+    void setLogLevel(const std::string& levelStr, bool applyToFile = false) {
+        auto normalizedLevel = levelStr;
+        std::transform(
+            normalizedLevel.begin(),
+            normalizedLevel.end(),
+            normalizedLevel.begin(),
+            ::tolower);
+        auto lvl = spdlog::level::from_str(normalizedLevel);
+        setLevel(lvl, applyToFile);
+    }
+
+    void setLogLevelFromEnv(const std::string& envKey = "AYON_USD_RESOLVER_LOG_LVL", bool applyToFile = false) {
+        auto envVal = std::getenv(envKey.c_str());
+        if (envVal) {
+            setLogLevel(std::string(envVal), applyToFile);
+            std::cout << "[AyonLogger] Log level set from environment variable '" << envKey 
+                      << "' with value '" << envVal << "'" << std::endl;
+        }
     }
 
     void setLogLevelInfo(bool applyToFile = false) {
