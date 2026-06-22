@@ -5,7 +5,10 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
+#include <algorithm>
+#include <cctype>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <mutex>
@@ -28,8 +31,10 @@
 class AyonLogger {
 public:
     static AyonLogger& getInstance() {
-        static AyonLogger instance;
-        return instance;
+        // Keep the logger alive until process exit. DLL-local static destruction
+        // order in host applications can be unsafe during shutdown on Windows.
+        static auto* instance = new AyonLogger();
+        return *instance;
     }
 
     // Explicit Initialization for File Logging
@@ -48,6 +53,14 @@ public:
 
         std::cout << "[AyonLogger] Initializing async file logger at: " << filepath << std::endl;
         try {
+            auto abs_path = std::filesystem::absolute(filepath).string();
+            {
+                std::ofstream probe(abs_path, std::ios::app);
+                if (!probe.is_open()) {
+                    throw std::runtime_error("Failed opening file " + abs_path + " for writing");
+                }
+            }
+
             // Initialize async thread pool only if not already initialized
             // (another component may have already called spdlog::init_thread_pool)
             if (!spdlog::thread_pool()) {
@@ -55,7 +68,6 @@ public:
             }
             m_fileLoggerThreadPool = spdlog::thread_pool();
 
-            auto abs_path = std::filesystem::absolute(filepath).string();
             std::string logger_name = std::string("AyonLogger_file_logger_") + abs_path;
 
             m_fileLogger = spdlog::basic_logger_mt<spdlog::async_factory>(
@@ -155,6 +167,30 @@ public:
                   fmt::format_string<Args...> fmt, Args&&... args) {
         if (isKeyActive(it))
             log(spdlog::level::critical, fmt, std::forward<Args>(args)...);
+    }
+
+    void setLogLevel(spdlog::level::level_enum lvl, bool applyToFile = false) {
+        setLevel(lvl, applyToFile);
+    }
+
+    void setLogLevel(const std::string& levelStr, bool applyToFile = false) {
+        auto normalizedLevel = levelStr;
+        std::transform(
+            normalizedLevel.begin(),
+            normalizedLevel.end(),
+            normalizedLevel.begin(),
+            [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+        auto lvl = spdlog::level::from_str(normalizedLevel);
+        setLevel(lvl, applyToFile);
+    }
+
+    void setLogLevelFromEnv(const std::string& envKey = "AYON_USD_RESOLVER_LOG_LVL", bool applyToFile = false) {
+        auto envVal = std::getenv(envKey.c_str());
+        if (envVal) {
+            setLogLevel(std::string(envVal), applyToFile);
+            std::cout << "[AyonLogger] Log level set from environment variable '" << envKey
+                      << "' with value '" << envVal << "'" << std::endl;
+        }
     }
 
     void setLogLevelInfo(bool applyToFile = false) {
