@@ -18,7 +18,7 @@
  */
 YNPUT_TOOL_AYON_NAMESPACE_OPEN
 
-std::string
+inline std::string
 rootReplace(const std::string &rootLessPath, const std::unordered_map<std::string, std::string> &siteRoots) {
     auto & logger = AyonLogger::getInstance();
     static const std::string kLogKeyName = "rootReplace";
