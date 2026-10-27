@@ -5,6 +5,7 @@
 #include "../../lib/logging/AyonLogger.hpp"
 #include <cstdlib>
 #include <map>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -16,7 +17,7 @@
  * @return std::string env key value or empty std::string if envKey == nullptr
  */
 YNPUT_CORE_IOSTD_NAMESPACE_OPEN
-std::string
+inline std::string
 getEnvKey(const std::string &envKey) {
     auto & logger = AyonLogger::getInstance();
     static const std::string kLogKeyName = "getEnvKey";
@@ -40,7 +41,7 @@ getEnvKey(const std::string &envKey) {
  * @param dirtyKey input key
  * @return will return a clean Env Key
  */
-std::string
+inline std::string
 cleanEnvKey(std::string &dirtyKey) {
     auto & logger = AyonLogger::getInstance();
     static const std::string kLogKeyName = "cleanEnvKey";
@@ -67,7 +68,7 @@ cleanEnvKey(std::string &dirtyKey) {
  * @param delimiter delimiter used to split the string
  * @return vector of elements resulting from splitting the string by the delimiter. the delimiter will be removed
  */
-std::vector<std::string>
+inline std::vector<std::string>
 split(const std::string &str, char delimiter) {
     auto & logger = AyonLogger::getInstance();
     static const std::string kLogKeyName = "splitEnvValue";
@@ -93,7 +94,7 @@ split(const std::string &str, char delimiter) {
  *
  * @param envKey
  */
-std::vector<std::string>
+inline std::vector<std::string>
 getEnvArray(const std::string &envKey) {
     auto & logger = AyonLogger::getInstance();
     static const std::string kLogKeyName = "getEnvArray";
@@ -123,7 +124,7 @@ getEnvArray(const std::string &envKey) {
  * @param envKey
  * @return
  */
-std::map<std::string, std::string>
+inline std::map<std::string, std::string>
 getEnvMap(const std::string &envKey) {
     auto & logger = AyonLogger::getInstance();
     static const std::string kLogKeyName = "getEnvMap";
